@@ -1,5 +1,5 @@
 # R-LAB
-Intro to R, Stat-tests and plotting LAB (GreenLAB)
+Intro to R, Stat-tests and plotting LAB 
 GREEN-LAB R Introduction Scripts and Notes
 # Overview
 This repository contains R scripts and notes created by GREEN-LAB to serve as an introduction to R programming. 

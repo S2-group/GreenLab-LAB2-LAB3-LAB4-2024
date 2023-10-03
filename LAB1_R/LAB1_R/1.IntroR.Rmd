@@ -1,0 +1,253 @@
+---
+title: "R in practice 29-9-2023"
+author: "theodoros foskolos"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, results = 'hide')
+```
+
+## 
+
+## LAB 1 : Intro to the R programming language + tidyverse
+
+# 
+
+```{r}
+# Importing/ installing libraries
+#install.packages(tidyverse)
+library (tidyverse) # contains dplyr for data manipul, ggplot for plotting and visualising and more usefull functions and utilities
+
+```
+
+```{r}
+# 2 equivalent versions of the assignment operator, namely <- and =
+x <- 4 
+y <- 2
+
+x + y 
+
+
+```
+
+```{r}
+z <- x + y^2
+
+z
+```
+
+# **Atomic Vectors :numeric**, **character**, **logical**, **complex** and **raw**.
+
+# Numeric Vectors
+
+```{r}
+num_vec1 <- c(8, 3, 6, 10)
+num_vec2 <- c(3:22)
+num_vec2
+```
+
+```{r}
+seq(1, 10)
+```
+
+```{r}
+rep(1:3,3)
+```
+
+```{r}
+vec1 <- sample(1:100, 10, replace=TRUE)
+vec2 <- runif(10)
+
+# Combine the vectors into a matrix
+mat <- data.frame(cbind(vec1, vec2))
+
+# Name the columns
+colnames(mat) <- c("RandomNumbers1", "RandomNumbers2")
+
+```
+
+# Basic mathematical functions
+
+```{r}
+mat$RandomNumbers1 <- mat$RandomNumbers1/2
+mat$RandomNumbers2 <- log10(mat$RandomNumbers2)
+```
+
+# Help function
+
+```{r}
+# Help
+?runif
+```
+
+# Character vectors
+
+```{r}
+# concatenation function c
+ch_vec <- c("john", "maria", "mike", "1029")
+ch_vec
+```
+
+# Logic vectors
+
+```{r}
+logical_vec <- c(TRUE, FALSE, 2 == 5)
+logical_vec
+```
+
+# NA values part of data inspection
+
+```{r}
+# Create a vector with NA values, NA stands for "Not Available" or "Missing Value" in R
+x <- c(1, 2, NA, 4, NA, 6)
+
+# Check for NA values
+is.na(x)
+```
+
+# Import CSV and basic data inspection
+
+```{r}
+
+data = read.csv("data/aggregated_results.csv", stringsAsFactors = TRUE)
+
+```
+
+```{r}
+head(data)
+```
+
+```{r}
+tail(data)
+```
+
+```{r}
+data[1:10,c("energy_trapz","Energy_J")]
+```
+
+```{r}
+#Extracting elements of data frames and lists using [[ or $
+head(data$Energy_J)
+```
+
+```{r}
+Energy_df <- data %>%
+  # select is used to pass only these columns of interest in the new dataframe
+  select(browser, Loading_time, Energy_J, energy_trapz, GPU.Load....) %>%
+  # filter is used to filter the specific range - values into the new dataframe
+  filter(Loading_time < 600)%>%
+  filter(Energy_J < 0.04)
+
+head(Energy_df)
+
+```
+
+```{r}
+#mutate at help us change the data type of the columns, here we make these 2 columns  to a factor
+Energy_df <- Energy_df %>%
+  mutate_at(c("browser", "Loading_time"), as.factor)
+
+Energy_df$browser%>%
+  levels()
+Energy_df
+```
+
+A **factor** is a vector in which elements are allowed to only hold a limited number of values. You saw the same with logical vectors, where only the values `TRUE` and `FALSE` can be entered in the elements. **factor** vectors are the generalization of this idea. This variable can assume two values, namely 'Male' and 'Female', or 'M' and 'F'. or whatever you like. To express this fact, that we only consider two values we can make a factor vector using the `factor()` function. As its input, it gets a character vector with the values that we put in there
+
+```{r}
+# Insert a new row
+#This generates a sample of strings either "LAPTOP" or "Desktop". with the sample saze equal to the rows of Energy_df. Replace = True allows the replacement and for the value to be chosen more than once
+
+device<- sample(c("LAPTOP", "Desktop"),nrow(Energy_df), replace = TRUE)
+
+# Categorical data consists of distinct categories, for example organism species for biological data or device for the type of data we use.
+
+Energy_df["device"]<- as.factor(device)
+Energy_df
+```
+
+# Basic Statistics
+
+```{r}
+mean(Energy_df$Energy_J)
+
+```
+
+```{r}
+sd(Energy_df$Energy_J)
+```
+
+```{r}
+summary(Energy_df)
+```
+
+```{r}
+Energy_df %>%
+  group_by(browser)%>%
+  summarise( energy_mean = mean(Energy_J), 
+             energy_sd = sd(Energy_J))
+```
+
+# Renaming
+
+```{r}
+# We rename the variables to consider so that their names are more mnemonic
+data = rename(data, energy = energy_trapz)
+data = rename(data, load_time = Loading_time)
+data = rename(data, fcp = fcp)
+data = rename(data, fp = fp)
+data = rename(data, packets = n_packets)
+data = rename(data, bytes = n_bytes)
+data = rename(data, cpu = CPU.Load....)
+data = rename(data, gpu = GPU.Load....)
+data = rename(data, mem = Memory.Usage..KB.)
+```
+
+# Conversions
+
+```{r}
+
+####data$mem <- data$mem / 1024 # we convert memory consumption from Kb to Mb
+data$bytes <- data$bytes / 1024 # we convert exchanged bytes from bytes to Kb
+
+```
+
+# Data Transformation
+
+```{r}
+# list apply output, applies the function to all the column rows
+# with lapply and mapply you can avoid for loops
+lapply(Energy_df, is.numeric)
+```
+
+```{r}
+#to make a list with only the names of the numeric columns, we can use slice to get just the names of the numeric columns
+num_cols <- colnames(Energy_df)[unlist(lapply(Energy_df, is.numeric))]
+num_cols
+```
+
+# Histograms- Distribution
+
+```{r}
+hist(Energy_df$Energy_J, main = "Histogram of Energy")
+```
+
+```{r}
+# if we want to do this for all the numeric columns we can fit multiple columns side by side
+
+par(mfrow= c(1,3))
+# mapply , you cn use further arguments to the hist function, main=...
+mapply(hist, Energy_df[num_cols], main = num_cols)
+```
+
+```{r}
+Energy_df <- Energy_df %>%
+  mutate(Energy_J_log =log(Energy_J),
+         Energy_J_sqrt = sqrt(Energy_J)
+         )
+```
+
+

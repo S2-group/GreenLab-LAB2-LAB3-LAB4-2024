@@ -1,0 +1,167 @@
+---
+title: "Stat- tests"
+author: "theodoros foskolos"
+date: "2023-09-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, results = "hide",fig.show = 'hide'  )
+```
+
+```{r}
+library(tidyverse)
+```
+
+# LAB 2 -Android runner
+
+```{r}
+#regural expressions can be checked on regex101
+csv_paths <- list.files(path= "./data",
+             recursive = TRUE, # recursive checks all the sub_directories
+             pattern = "^Joule.*\\.csv",
+             full.names = TRUE)
+```
+
+```{r}
+app_data <- csv_paths %>%
+  lapply(read_csv) %>%
+  bind_rows
+app_data
+
+```
+
+```{r}
+# add experiment based on experiment name
+app_data["experiment"] <- c(rep('cpu_test',10),
+                            rep('display_test',10),
+                            rep('speaker_test',10)
+                            )
+
+```
+
+```{r}
+app_data$experiment <- as.factor(app_data$experiment)
+
+```
+
+```{r}
+# to do it based on the names with string split
+app_data["experiment"] <- csv_paths%>%
+  strsplit('-', fixed = TRUE) %>%
+  rapply(nth, n=8)%>%
+  factor
+app_data
+
+```
+
+```{r}
+```
+
+```{r}
+# lets say we simulate runtime as an extra variable
+shared_run_time <- seq(from = 0, by = 0.1, length.out = 10)  # Adjust as needed
+app_data$run_time <- rep(shared_run_time, times = 3)
+```
+
+# LAB 3
+
+# Basic function to make plots on labs 1 data
+
+```{r}
+df_lab1 <- read.csv("aggregated_results.csv")
+```
+
+```{r}
+qqplot<- function(column, col_name) {
+  qqnorm(column, main = paste("QQ-Plot of", col_name))
+  qqline(column, col = "red")
+}
+
+numeric_cols <- names(df_lab1[sapply(df_lab1, is.numeric)])
+
+lapply(numeric_cols, function(col_name) qqplot(df_lab1[[col_name]], col_name))
+```
+
+# QQplot
+
+```{r}
+qqnorm(app_data$Joule_calculated)
+qqline(app_data$Joule_calculated, col = "red")
+```
+
+```{r}
+ggplot(app_data, aes(x = run_time, y = Joule_calculated, color = experiment)) +
+  geom_point(size = 3, shape = 19, alpha = 0.7) +  # Scatter points
+  geom_line() + #connects the datapoints
+  geom_smooth(method = 'lm', se = TRUE) + 
+  ggtitle("consumption of energy over time") +
+  xlab("Run Time (s)") +
+  ylab("Energy (Joules)")
+
+```
+
+# Boxplot
+
+```{r}
+ggplot(app_data, aes(x=experiment, y=Joule_calculated, fill=experiment)) +
+  geom_boxplot() +   
+  stat_summary(fun = mean,color= 'black', geom = "point", shape = 1, size = 2) +
+  labs(title="Boxplot with Summary Statistics",
+       x="Experiment",
+       y="Joule Calculated") +
+  theme_minimal()
+```
+
+# Violin plot
+
+A violin plot can be useful when wehave a lot of data points, and we'r interested in visualizing the distribution and its variability.
+
+```{r}
+violin <- ggplot(app_data, aes(x=experiment, y=Joule_calculated, fill=experiment)) +
+          geom_violin(trim=FALSE, alpha = 0.8) + # alpha for the opacity
+          geom_boxplot(width=0.2, fill="white", outlier.size = 0.2) +
+          stat_summary(fun = mean, geom = "point", shape = 1, size = 2) +
+          labs(title="Violin Plot with Inner Boxplot",
+          x="Experiment",
+          y="Joule Calculated") 
+violin
+```
+
+```{r}
+dir.create("./plots")
+```
+
+```{r}
+ggsave("./plots/violin.png", plot = violin, width = 10, height = 6)
+```
+
+# Classic histogram
+
+```{r}
+ggplot(app_data, aes(x = Joule_calculated)) + geom_histogram(binwidth = 1)
+```
+
+# Single histograms per experiment
+
+```{r}
+# single histogram per experiment
+ggplot(app_data, aes(x = Joule_calculated)) + geom_histogram(binwidth = 1) + facet_grid(~ experiment)
+
+```
+
+# Density plot
+
+```{r}
+ggplot(app_data, aes(x = Joule_calculated, fill = experiment)) + geom_density(alpha = 0.5)
+
+```
+
+# Bar plot
+
+```{r}
+ggplot(app_data, aes(x = experiment, y = Joule_calculated)) + stat_summary(fun = mean, geom = "bar")
+
+```

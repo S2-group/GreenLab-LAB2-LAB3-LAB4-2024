@@ -1,0 +1,136 @@
+---
+title: "R in practice 27-9-2024"
+author: "chiara zambianchi"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, results = 'hide')
+```
+
+# LAB 2 : Intro to the R programming language + tidyverse
+
+## Exercise 1 - set up
+
+**Task 3**: Installing and loading tidyverse (you need to install only the first time, but you need to load the package every time you run the script)
+
+```{r}
+#install.packages(tidyverse) 
+library (tidyverse) # contains dplyr for data manipul, ggplot for plotting and visualising and more usefull functions and utilities
+
+```
+
+**Task 5**: Import CSV
+
+```{r}
+
+df <- read.csv("data/aggregated_results.csv", stringsAsFactors = TRUE)
+
+```
+
+## Exercise 2 - data inspection
+
+**Task 6**: Inspect first (head) and last (tail) 10 rows of the dataframe
+
+```{r}
+head(df)
+```
+
+```{r}
+tail(df)
+```
+
+**Task 7**: Inspect the first/last 10 rows of 2 specific columns.
+
+```{r}
+#Extracting elements of data frames and lists using $
+head(df[, c("Energy_J", "Energy_mJ")])
+```
+
+```{r}
+tail(df[, c("Energy_J", "Energy_mJ")])
+```
+
+## Exercise 3 - data manipulation
+
+**Task 8**: Rename Loading_time, Memory.Usage..KB., GPU.Load... to loading, mem and gpu respectively.
+
+```{r}
+# We rename the variables to consider so that their names are more mnemonic
+df = rename(df, loading = Loading_time)
+df = rename(df, gpu = GPU.Load....)
+df = rename(df, mem = Memory.Usage..KB.)
+
+```
+
+**Task 9** : Create a new dataframe with only specific columns and values from the original one.
+
+```{r}
+Energy_df <- df %>%
+  # select is used to pass only these columns of interest in the new dataframe
+  select(browser, loading, Energy_J, n_bytes, gpu, mem) %>%
+  # filter is used to filter the specific range - values into the new dataframe
+  filter(loading < 8000)
+
+head(Energy_df)
+
+```
+
+**Task 10**: Use the sample function for a new column named device to the new dataframe with a set of 3 devices of your choice.
+
+A **factor** is a vector in which elements are allowed to only hold a limited number of values. You saw the same with logical vectors, where only the values `TRUE` and `FALSE` can be entered in the elements. **factor** vectors are the generalization of this idea. This variable can assume two values, namely 'Male' and 'Female', or 'M' and 'F'. or whatever you like. To express this fact, that we only consider two values we can make a factor vector using the `factor()` function. As its input, it gets a character vector with the values that we put in there
+
+```{r}
+#This generates a sample of strings either "Laptop", "Desktop" or "Smartphone" with the sample size equal to the rows of Energy_df. Replace = True allows the replacement and for the value to be chosen more than once
+
+Energy_df$device <- sample(c("Laptop", "Desktop", "Smartphone"), nrow(Energy_df), replace = TRUE)
+
+```
+
+## Exercise 4 -  **tidyverse and dplyr**
+
+**Task 11**: use mutate_at to make browser and the device a factor. 
+
+```{r}
+#mutate at help us change the data type of the columns, here we make these 2 columns  to a factor
+Energy_df <- Energy_df %>%
+  mutate_at(c("browser", "device"), as.factor)
+```
+
+**Task 12**: normalise Energy_J (log transform) and make a new column. Do the same for square root of Energy_J
+```{r}
+Energy_df$Energy_J_log <- log(Energy_df$Energy_J)
+Energy_df$Energy_J_sqrt <- sqrt(Energy_df$Energy_J)
+```
+
+**Task 13**: Group per device you sampled and make a summary of the mean, median, and standard deviation.
+```{r}
+Energy_df_summary <-Energy_df %>%
+  group_by(device) %>%
+  summarise(
+    mean_Energy_J = mean(Energy_J),
+    median_Energy_J = median(Energy_J),
+    sd_Energy_J = sd(Energy_J)
+  )
+
+Energy_df_summary
+
+```
+
+
+**Task 14**: Inspect which of the data frames columns are numeric, pass their names in a char vector and make a histogram for each one (tip: you will need lapply, unlist, and is.numeric).
+```{r}
+# is.numeric checks for numeric data 
+# list apply output, applies the function to all the column rows
+# unlist transforms lists into vectors
+# names creates a list with the name of the wanted columns
+
+numeric_columns <- names(Energy_df)[unlist(lapply(Energy_df, is.numeric))]
+
+mapply(hist, Energy_df[numeric_columns], main = numeric_columns)
+
+```
+
+

@@ -1,0 +1,102 @@
+---
+title: "R in practice 27-9-2024"
+author: "chiara zambianchi"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, results = 'hide')
+```
+
+# LAB 2 : Intro to the R programming language + tidyverse
+
+## Exercise 0: how to use R
+
+Before starting, some useful information and tricks for a smooth use of R
+
+```{r ex0_operator}
+# 2 equivalent versions of the assignment operator, namely <- and =
+x <- 4 
+y <- 2
+
+x + y 
+
+
+```
+
+```{r ex0_function }
+z <- x + y^2
+
+z
+```
+
+### **Atomic Vectors :numeric**, **character**, **logical**, **complex** and **raw**.
+
+#### Numeric Vectors
+
+```{r ex0_vector}
+num_vec1 <- c(8, 3, 6, 10)
+num_vec2 <- c(3:22)
+num_vec2
+```
+
+```{r ex0_seq}
+seq(1, 10)
+```
+
+```{r ex0_rep}
+rep(1:3,3)
+```
+
+```{r ex0_vec}
+vec1 <- sample(1:100, 10, replace=TRUE)
+vec2 <- runif(10)
+
+# Combine the vectors into a matrix
+mat <- data.frame(cbind(vec1, vec2))
+
+# Name the columns
+colnames(mat) <- c("RandomNumbers1", "RandomNumbers2")
+
+```
+
+#### Character vectors
+
+```{r ex0_conc}
+# concatenation function c
+ch_vec <- c("john", "maria", "mike", "1029")
+ch_vec
+```
+
+#### Logic vectors
+
+```{r ex0_log}
+logical_vec <- c(TRUE, FALSE, 2 == 5)
+logical_vec
+```
+
+### Basic mathematical functions
+
+```{r ex0_mat}
+mat$RandomNumbers1 <- mat$RandomNumbers1/2
+mat$RandomNumbers2 <- log10(mat$RandomNumbers2)
+```
+
+### Help function
+
+```{r ex0_help}
+# Help
+?runif
+```
+
+### NA values part of data inspection
+
+```{r ex0_na}
+# Create a vector with NA values, NA stands for "Not Available" or "Missing Value" in R
+x <- c(1, 2, NA, 4, NA, 6)
+
+# Check for NA values
+is.na(x)
+```

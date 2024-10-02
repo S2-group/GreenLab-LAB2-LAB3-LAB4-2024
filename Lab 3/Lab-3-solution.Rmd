@@ -1,0 +1,97 @@
+---
+title: "Lab-3-solution"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-10-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Task 1
+Read the filenames and filter them out using regex. At the end attach values for experiment variable, knowing that paths corresponding to different experiments are in order.
+```{r message=FALSE}
+all_paths <- list.files(path= "./data",
+                        recursive = TRUE,
+                        full.names = TRUE,
+                        pattern = "Joule.*\\.csv")
+
+cpu_paths <- all_paths[grepl("cpu", all_paths)]
+display_paths <- all_paths[grepl("display", all_paths)]
+speaker_paths <- all_paths[grepl("speaker", all_paths)]
+grouped_paths = c(cpu_paths, display_paths, speaker_paths)
+app_data <- grouped_paths %>% lapply(read_csv) %>% bind_rows
+app_data$experiment <- c(rep('cpu_test',length(cpu_paths)), 
+                            rep('display_test',length(display_paths)),
+                            rep('speaker_test',length(speaker_paths)) )
+app_data$experiment <- as.factor(app_data$experiment)
+```
+
+## Task 2
+
+```{r results='hide', message=FALSE}
+app_data %>%
+  group_by(experiment) %>%
+  group_split() %>%
+  lapply(function(group_data) {
+    hist(group_data$Joule_calculated, 
+         main = unique(group_data$experiment), 
+         xlab = "Joule Calculated")
+  })
+```
+```{r}
+app_data %>%
+  group_by(experiment) %>%
+  summarize(n = n(),
+            stest = shapiro.test(Joule_calculated)$p.value)
+```
+
+## Task 3
+
+```{r} 
+model = lm(Joule_calculated~experiment, data=app_data) 
+anova(model)
+```
+
+## Task 4
+
+```{r, results='hide', message=FALSE}
+at_data = read_csv('./data/autotrader/data.csv')
+m1 = lm(price ~ yearsold + mileage, data=at_data)
+hist(at_data$price)
+qqnorm(resid(m1))
+qqline(resid(m1))
+```
+Residuals for the model are not normal. We can see that price data is not normal either.
+## Task 5
+```{r results='hide', message=FALSE, warning=FALSE}
+library(bestNormalize)
+at_data$price_norm = bestNormalize(at_data$price)$x.t
+at_data$yearsold_norm = bestNormalize(at_data$yearsold)$x.t
+at_data$mileage_norm = bestNormalize(at_data$mileage)$x.t
+
+m2 = lm(price_norm ~ yearsold_norm + mileage_norm, data=at_data)
+hist(at_data$price_norm)
+qqnorm(resid(m2))
+qqline(resid(m2))
+```
+Now we can see we can use the data with linear models and residuals look much better (more normal).
+## Task 6
+Residuals are normal so the model is good, even though it's not parametric.
+
+```{r}
+library(ARTool)
+
+dm_data = read_csv("./data/dry_matter/data.csv")
+dm_data$Tray = as.factor(dm_data$Tray)
+dm_data$Moisture = as.factor(dm_data$Moisture)
+dm_data$Fertilizer = as.factor(dm_data$Fertilizer)
+
+model = art(DryMatter ~ Moisture*Fertilizer + (1|Tray), data=dm_data)
+anova(model)
+qqnorm(resid(model))
+qqline(resid(model))
+```

@@ -1,72 +1,61 @@
----
-output:
-  pdf_document: default
-  html_document: default
----
 # GreenLab-LAB3-2024
 A set of exercises for the GreenLab Lab 3 2024 (4th October 2024). This lab 
 focuses on running basic statistical tests and manipulating data. It will be required
 to install libraries `ARTool` and `bestNormalize`. Their respective docs:
+
 https://cran.r-project.org/web/packages/ARTool/readme/README.html
+
 https://cran.r-project.org/web/packages/bestNormalize/vignettes/bestNormalize.html
 
 On top of that you mind need dplyr doc:
+
 https://dplyr.tidyverse.org/
 
-## Exercise 0 - lgg data preprocessing
+## Exercise 1 - Data loading and inspection
 ### Task 1
-In a directory data/lgg6 there is data scattered in 3 directories. 
-Each directory stores information about measures taken for different devices
-(cpu/display/speaker).
+In a directory `data/ease2024/Run_Table_TPCH.csv` there is data describing 
+results of Data Analysis Tasks Benchmarking. 
 
-Your task is to load the scattered data and combine in into a single tibble with two columns:
+Your task is to load the data in into a single tibble with 4 columns:
+`library`, `dataframe_size`, `trial` and our target variable `energy_usage`.
 
-  1. `Joule_calculated` which is a numerical variable
-  2. `experiment` which is a factor with 3 values: `cpu_test`, `display_test`, `speaker_test`
-
-To solve this question use a function `list.files` and pass correct `pattern` parameter.
-Then divide it into 3 vectors with `grepl` command to find files corresponding to proper device
-and at the end concatenate them.
-
-At this point you should end up with a vector of paths, which then you can
-load with `lapply`, `read_csv` and `bind_rows` into a single tibble.
-Finally add the column corresponding to the experiment type as a factor.
+Load the dataframe and transform proper columns into factors.
 
 ### Task 2
-Visualize `Joule_calculated` for each experiment type and test it for normality.
-You can utilize `group_by`, `group_split` and `lapply` with R lambda functions
-to create all the plots at the same time. You can also use `summarize` function
-to run all the tests.
+Visualize `energy_usage` with histograms for each combination of `library` and
+`dataframe_size`. You can utilize `group_by`, `group_split` and `lapply` 
+with R lambda functions to create all the plots at the same time. 
 
 ### Task 3
-Test if different experiments have different mean joule calculated.
-Use a proper test (parametric/non-parametric) and rationalize it.
+Test normality of `energy_usage` for each combination of `library` and
+`dataframe_size` type with `shapiro.test`.
+On top of functions specified in the Task 2 you can also use `summarize` 
+function to run all the tests.
 
-## Exercise 1 - Normalization
-The Autotrader data contains information about the price of a car with respect 
-to its mileage and age. Load it to a dataframe from `data/autotrader/data.csv`. 
-
+## Exercise 2 - Normalization
 ### Task 4
-Fit a linear model with response variable `price` and predictor variables 
-`yearsold` and `mileage`. Plot residuals of the model. What's wrong with residuals and why?
+Normalize target variable `energy_usage` using `bestNormalize` package. Create a 
+new column `norm_energy_usage` with normalized data.
 
 ### Task 5
-Use histograms and normality tests to verify which variables need normalizing.
-Normalize relevant vairables using `bestNormalize` function from the bestNormalize
-library. Perform the same steps as in the previous tasks, except use normalized 
-variables.
-What change can you see?
+Plot `norm_energy_usage` for each combination of `library` and
+`dataframe_size` separately and run the normality tests. 
+Can you use parametric test with new normalized data?
 
-## Exercise 2 - ART
+## Exercise 3 - Parametric and non-parametric tests
 ### Task 6
-Load the data from `./data/dry_matter/data.csv`. It's a data frame from an 
-experiment in which the effects of Moisture and Fertilizer on DryMatter in 
-peat pots was tested.
-Columns `Fertilizer`, `Tray` and `Moisture` are factors, while column `DryMatter`
-will be the response variable.
+Use non-parametric test `wilcox.test` to check whether energy usage is different 
+between libraries for small dataframes. What can you observe?
 
-Construct a model using art() function (Aligned Rank Transform) with the fixed effects and all of their 
-interactions (Moisture*Fertilizer) and a grouping term (1|Tray).
+### Task 7
+Use art() model to observe influence of `library`, `dataframe_size` and its interactions to
+`energy_used`. Treat `trial` as a random effect for repeated measures experiment. 
+What can you see? 
 
-Run `anova()` on the constructed model and draw conclusions from the output.
-Plot the residuals to validate normality of the errors.
+Validate your model with `summary(model)`.
+
+### Task 8
+Similarly to art, run lmer() model to observe similar effects, except your target
+variable should be `norm_energy_used`. 
+
+Verify normality of residuals. How to check if this model is correct?

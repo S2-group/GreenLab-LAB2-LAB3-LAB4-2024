@@ -1,0 +1,154 @@
+---
+title: "R Lab 3 (Visualization with R)"
+author: "Italo Rossi"
+date: "2024-10-06"
+output: pdf_document
+---
+
+This repository contains a set of exercises for the GreenLab Lab 4 of 2024 (11th October 2024). The exercises are designed to help students get familiar with the ggplot2 package, some of its different plot types and how customizable and flexible they are.
+
+You can consult `ggplot2_cheat_sheet.pdf` as a reference point.
+
+## Exercise 0: Before Plotting
+
+Install and load ggplot2
+
+```{r ex0_package, include=FALSE}
+
+install.packages('ggplot2')
+library(ggplot2)
+```
+
+Load `Run_Table_TPCH.csv` as a data frame.
+
+```{r ex0_df}
+
+df <- read.csv('data/Run_Table_TPCH.csv')
+
+```
+
+For the following exercises, we will call each combination of `library` and `dataframe_size` an "**experiment"**.
+
+## Exercise 1: Boxplot
+
+### Task 1
+
+Create a boxplot to visualize the distribution of `energy_usage` for each **"experiment"**
+
+### Task 2
+
+Label the x-axis as **"Dataframe Size"** and the y-axis as **"Energy Usage"**
+
+```{r ex1}
+
+p_boxplot <- ggplot(df, aes(x = dataframe_size, y = energy_usage, fill = library)) +
+  geom_boxplot() +
+  facet_wrap(~library) +
+  theme_minimal() +
+  labs(
+    title = "Energy Usage by Library and Dataframe Size",
+    x = "Dataframe Size",
+    y = "Energy Usage",
+    fill = "Library"
+    ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.background = element_rect(fill = "lightgray"),
+    strip.text = element_text(face = "bold")
+    )
+
+p_boxplot
+```
+
+## Exercise 2: Violin Plot
+
+### Task 3
+
+Create a violin plot of `energy_usage` for each **"experiment"**.
+
+### Task 4
+
+Overlay a boxplot inside the violin plot to show statistical summary. Adjust its opacity if necessary for better visibility.
+
+### Task 5
+
+Add \`geom_jitter()\` to overlay individual datapoints. Adjust the size of the points if necessary for better visibility.
+
+```{r ex2}
+
+p_violin <- ggplot(df, aes(x=dataframe_size, y=energy_usage, fill=library)) +
+  geom_violin(trim=FALSE) +
+  geom_boxplot(width=0.25, fill="white", alpha=0.5, outlier.size = 0.2) + # alpha = opacity
+  geom_jitter(size=0.25) +
+  facet_wrap(~library) +
+  stat_summary(fun = mean, geom = "point", shape = 1, size = 2) +
+  labs(title="Violin Plot with Inner Boxplot and Jitter",
+  x="Dataframe Sze",
+  y="Energy Usage")
+
+p_violin
+```
+
+## Exercise 3: Boxplot + mean and standard error
+
+### Task 6
+
+Create a boxplot of `energy_usage` for each **"experiment"**. If you created a ggplot object containing your plot from Exercise 1, you can reuse it.
+
+### Task 7
+
+Use `stat_summary()` to show the mean and standard error on the boxplot.
+
+```{r ex3}
+
+# we can simply add stat_summary to the ggplot object created for Exercise 1 as needed
+p_boxplot +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 18,
+    size = 3,
+    color = "white",
+    position = position_dodge(width = 0.75)
+  ) +
+  stat_summary(
+    fun.data = mean_se,
+    geom = "errorbar",
+    width = 0.2,
+    color = "white",
+    position = position_dodge(width = 0.75)
+  )
+```
+
+## Exercise 4: Scatter Plot
+
+### Task 8
+
+Create a scatter plot (`geom point()`) to show how `energy_usage` varies over `trial`.
+
+### Task 9
+
+Assign a unique color to each **"experiment"** and add a legend
+
+```{r ex4}
+ggplot(df, aes(x = trial, y=energy_usage, color = interaction(library,dataframe_size))) +
+  geom_point(alpha = 0.75) +
+  labs(
+    title = "Energy Usage by Experiment Trial",
+    x = "Trial",
+    y = "Energy Usage",
+    color = "Experiment"
+  )
+```
+
+## Exercise 5: Density Plot
+
+### Task 10
+
+Create a density plot for `energy_usage` for each **"experiment"**.
+
+```{r ex5}
+ggplot(df, aes(x = energy_usage, fill = dataframe_size)) +
+  geom_density(alpha = 0.5) +
+  facet_wrap(~library)
+```

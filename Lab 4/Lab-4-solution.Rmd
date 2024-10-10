@@ -15,7 +15,7 @@ Install and load ggplot2
 
 ```{r ex0_package, include=FALSE}
 
-install.packages('ggplot2')
+#install.packages('ggplot2')
 library(ggplot2)
 ```
 
@@ -33,7 +33,7 @@ For the following exercises, we will call each combination of `library` and `dat
 
 ### Task 1
 
-Create a boxplot to visualize the distribution of `energy_usage` for each **"experiment"**
+Create a boxplot to visualize the distribution of `energy_usage` for each **"experiment"**. Use `facet_wrap()` to separate the experiments by library or dataframe size as you see fit.
 
 ### Task 2
 
@@ -72,7 +72,7 @@ Overlay a boxplot inside the violin plot to show statistical summary. Adjust its
 
 ### Task 5
 
-Add \`geom_jitter()\` to overlay individual datapoints. Adjust the size of the points if necessary for better visibility.
+Add `geom_jitter()` to overlay individual datapoints. Adjust the size of the points if necessary for better visibility.
 
 ```{r ex2}
 
@@ -141,14 +141,97 @@ ggplot(df, aes(x = trial, y=energy_usage, color = interaction(library,dataframe_
   )
 ```
 
-## Exercise 5: Density Plot
+## Exercise 5: Linear Regression trend line in Scatter Plot
 
 ### Task 10
 
-Create a density plot for `energy_usage` for each **"experiment"**.
+Using faceting, create a grid with 4 scatter plots (one per "experiment") showing how energy_usage correlates to execution_time, Including trend lines.
 
-```{r ex5}
+```{r ex5_10}
+
+ggplot(df, aes(x = execution_time, y = energy_usage)) +
+  geom_point(alpha = 0.75) +
+  geom_smooth(method = "lm", se = TRUE) +
+  facet_grid(library ~ dataframe_size) +
+  labs(
+    title = "Energy Usage by Execution Time",
+    x = "Execution Time",
+    y = "Energy Usage"
+  )
+```
+
+### Task 11
+
+If you plot `memory_usage` or `cpu_usage` as a function of `execution_time`, can you conclude whether memory or CPU are correlated to energy in any of the **"experiments"**? (Hint: looking at task 10, is energy always correlated to time in the same direction on all experiments?)
+
+```{r ex5_11}
+ggplot(df, aes(x = execution_time, y = memory_usage)) +
+  geom_point(alpha = 0.75) +
+  geom_smooth(method = "lm", se = TRUE) +
+  facet_grid(library ~ dataframe_size) +
+  labs(
+    title = "Memory Usage by Execution Time",
+    x = "Execution Time",
+    y = "Memory Usage"
+  )
+
+ggplot(df, aes(x = execution_time, y = cpu_usage)) +
+  geom_point(alpha = 0.75) +
+  geom_smooth(method = "lm", se = TRUE) +
+  facet_grid(library ~ dataframe_size) +
+  labs(
+    title = "CPU Usage by Execution Time",
+    x = "Execution Time",
+    y = "CPU Usage"
+  )
+```
+
+## Exercise 6: Density Plot
+
+### Task 12
+
+Create a density plot for `energy_usage` for each **"experiment"**, separate them using `facet_grid()`.
+
+```{r ex6}
 ggplot(df, aes(x = energy_usage, fill = dataframe_size)) +
   geom_density(alpha = 0.5) +
-  facet_wrap(~library)
+  facet_grid(library ~ dataframe_size)
+```
+
+## Exercise 7: LaTeX Table
+
+LaTeX is a typesetting system commonly used in scientific publishing.
+
+### Task 13
+
+Use dplyr functions to calculate the average `cpu_usage`, `memory_usage` and `energy_usage` for each "experiment".
+
+### Task 14
+
+Using the xtable package, format the summary table as LaTeX. You can copy the output for rendering in engines such as Overleaf or LaTeXiT.
+
+```{r ex7}
+# Load required libraries
+library(xtable)
+library(dplyr)
+
+# Create summary statistics
+summary_stats <- df %>%
+  group_by(library, dataframe_size) %>%
+  summarise(
+    cpu_avg = mean(cpu_usage),
+    memory_avg = mean(memory_usage),
+    energy_avg = mean(energy_usage),
+    .groups = 'drop'
+  )
+
+# Create and format the xtable
+summary_table <- xtable(summary_stats,
+                       caption = "Summary Statistics by Library and DataFrame Size",
+                       digits = c(0, 0, 0, 2, 2, 2))
+
+# Print the table (you can adjust the type of output as needed)
+print(summary_table, 
+      include.rownames = TRUE,
+      floating = FALSE)
 ```
